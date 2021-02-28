@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from ribs.archives import AddStatus
+from ribs.archives import AddStatus, GridArchive
 
 from .conftest import get_archive_data
 
@@ -22,11 +22,24 @@ def _assert_archive_has_entry(archive, indices, behavior_values,
                                    [objective_value] + list(solution))).all()
 
 
+def test_fails_on_dim_mismatch():
+    with pytest.raises(ValueError):
+        GridArchive(
+            dims=[10] * 2,  # 2D space here.
+            ranges=[(-1, 1)] * 3,  # But 3D space here.
+        )
+
+
 def test_properties_are_correct(_data):
     assert np.all(_data.archive.dims == [10, 20])
     assert np.all(_data.archive.lower_bounds == [-1, -2])
     assert np.all(_data.archive.upper_bounds == [1, 2])
     assert np.all(_data.archive.interval_size == [2, 4])
+
+    boundaries = _data.archive.boundaries
+    assert len(boundaries) == 2
+    assert np.isclose(boundaries[0], np.linspace(-1, 1, 10 + 1)).all()
+    assert np.isclose(boundaries[1], np.linspace(-2, 2, 20 + 1)).all()
 
 
 @pytest.mark.parametrize("use_list", [True, False], ids=["list", "ndarray"])

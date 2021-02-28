@@ -4,13 +4,13 @@ from numba import jit
 
 from ribs.archives._archive_base import ArchiveBase, require_init
 
-_EPSILON = 1e-9
+_EPSILON = 1e-6
 
 
 class GridArchive(ArchiveBase):
     """An archive that divides each dimension into uniformly-sized bins.
 
-    This archive is the container described in the `original MAP-Elites paper
+    This archive is the container described in `Mouret 2015
     <https://arxiv.org/pdf/1504.04909.pdf>`_. It can be visualized as an
     n-dimensional grid in the behavior space that is divided into a certain
     number of bins in each dimension. Each bin contains an elite, i.e. a
@@ -24,23 +24,29 @@ class GridArchive(ArchiveBase):
             implicitly defined in the length of this argument).
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
-            indicates the first dimension should have bounds ``(-1, 1)``, and
-            the second dimension should have bounds ``(-2, 2)``. ``ranges``
-            should be the same length as ``dims``.
+            indicates the first dimension should have bounds :math:`[-1,1]`
+            (inclusive), and the second dimension should have bounds
+            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
+            ``dims``.
         seed (int): Value to seed the random number generator. Set to None to
             avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
             and behavior values. We only support ``"f"`` / :class:`np.float32`
             and ``"d"`` / :class:`np.float64`.
+    Raises:
+        ValueError: ``dims`` and ``ranges`` are not the same length.
     """
 
     def __init__(self, dims, ranges, seed=None, dtype=np.float64):
         self._dims = np.array(dims)
-        behavior_dim = len(self._dims)
+        if len(self._dims) != len(ranges):
+            raise ValueError(f"dims (length {len(self._dims)}) and ranges "
+                             f"(length {len(ranges)}) must be the same length")
+
         ArchiveBase.__init__(
             self,
             storage_dims=tuple(self._dims),
-            behavior_dim=behavior_dim,
+            behavior_dim=len(self._dims),
             seed=seed,
             dtype=dtype,
         )
@@ -49,6 +55,12 @@ class GridArchive(ArchiveBase):
         self._lower_bounds = np.array(ranges[0], dtype=self.dtype)
         self._upper_bounds = np.array(ranges[1], dtype=self.dtype)
         self._interval_size = self._upper_bounds - self._lower_bounds
+
+        self._boundaries = []
+        for dim, lower_bound, upper_bound in zip(self._dims, self._lower_bounds,
+                                                 self._upper_bounds):
+            self._boundaries.append(
+                np.linspace(lower_bound, upper_bound, dim + 1))
 
     @property
     def dims(self):
@@ -70,6 +82,24 @@ class GridArchive(ArchiveBase):
         """(behavior_dim,) numpy.ndarray: The size of each dim (upper_bounds -
         lower_bounds)."""
         return self._interval_size
+
+    @property
+    def boundaries(self):
+        """list of numpy.ndarray: The boundaries of the bins in each dimension.
+
+        Entry ``i`` in this list is an array that contains the boundaries of the
+        bins in dimension ``i``. The array contains ``self.dims[i] + 1`` entries
+        laid out like this::
+
+            Archive bins:   | 0 | 1 |   ...   |    self.dims[i]    |
+            boundaries[i]:  0   1   2   self.dims[i] - 1     self.dims[i]
+
+        Thus, ``boundaries[i][j]`` and ``boundaries[i][j + 1]`` are the lower
+        and upper bounds of bin ``j`` in dimension ``i``. To access the lower
+        bounds of all the bins in dimension ``i``, use ``boundaries[i][:-1]``,
+        and to access all the upper bounds, use ``boundaries[i][1:]``.
+        """
+        return self._boundaries
 
     @staticmethod
     @jit(nopython=True)

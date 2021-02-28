@@ -74,17 +74,12 @@ servedocs: ## compile the docs watching for changes
 	DOCS_MODE=dev sphinx-autobuild \
 		--open-browser \
 		--watch ribs/ \
+		--watch examples/ \
 		docs/ \
 		docs/_build/html
 
-servedocs-ignore-vim: ## compile the docs watching for changes, ignore vim .swp files
-	DOCS_MODE=dev sphinx-autobuild \
-		--open-browser \
-		--watch ribs/ \
-		--ignore *.swp \
-		docs/ \
-		docs/_build/html
-
+release-test: dist ## package and upload a release to TestPyPI
+	twine upload --repository testpypi dist/*
 release: dist ## package and upload a release
 	twine upload dist/*
 

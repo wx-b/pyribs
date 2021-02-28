@@ -29,7 +29,7 @@ extras_require = {
         "matplotlib>=3.0.0",
         "gym~=0.17.0",  # Strict since different gym may give different results.
         "Box2D~=2.3.10",  # Used in envs such as Lunar Lander.
-        "fire>=0.3.0",
+        "fire>=0.4.0",
         "alive-progress>=1.0",
 
         # Dask
@@ -68,7 +68,7 @@ setup(
     author="ICAROS Lab pyribs Team",
     author_email="team@pyribs.org",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
@@ -82,7 +82,8 @@ setup(
         "Topic :: Scientific/Engineering :: Mathematics",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    description="A bare-bones quality diversity optimization library.",
+    description=
+    "A bare-bones Python library for quality diversity optimization.",
     install_requires=install_requires,
     extras_require=extras_require,
     license="MIT license",
@@ -95,6 +96,6 @@ setup(
     python_requires=">=3.6.0",
     test_suite="tests",
     url="https://github.com/icaros-usc/pyribs",
-    version="0.2.1",
+    version="0.3.0",
     zip_safe=False,
 )

@@ -11,7 +11,7 @@ class CVTArchive(ArchiveBase):
     """An archive that divides the entire behavior space into a fixed number of
     bins.
 
-    This archive originates in the `CVT-MAP-Elites paper
+    This archive originates in `Vassiliades 2018
     <https://ieeexplore.ieee.org/document/8000667>`_. It uses Centroidal Voronoi
     Tesselation (CVT) to divide an n-dimensional behavior space into k bins. The
     CVT is created by sampling points uniformly from the n-dimensional behavior
@@ -53,10 +53,10 @@ class CVTArchive(ArchiveBase):
             number of centroids/areas in the CVT.
         ranges (array-like of (float, float)): Upper and lower bound of each
             dimension of the behavior space, e.g. ``[(-1, 1), (-2, 2)]``
-            indicates the first dimension should have bounds ``(-1, 1)``, and
-            the second dimension should have bounds ``(-2, 2)``. Note that the
-            length of this array defines the dimensionality of the behavior
-            space.
+            indicates the first dimension should have bounds :math:`[-1,1]`
+            (inclusive), and the second dimension should have bounds
+            :math:`[-2,2]` (inclusive). ``ranges`` should be the same length as
+            ``dims``.
         seed (int): Value to seed the random number generator as well as
             :func:`~sklearn.cluster.k_means`. Set to None to avoid a fixed seed.
         dtype (str or data-type): Data type of the solutions, objective values,
@@ -139,7 +139,7 @@ class CVTArchive(ArchiveBase):
                 if samples.shape[1] != self._behavior_dim:
                     raise ValueError(
                         f"Samples has shape {samples.shape} but must be of "
-                        f"shape (n_samples, {self._behavior_dim})")
+                        f"shape (n_samples, len(ranges)={self._behavior_dim})")
             self._samples = samples
             self._centroids = None
         else:
@@ -148,7 +148,8 @@ class CVTArchive(ArchiveBase):
             if custom_centroids.shape != (bins, self._behavior_dim):
                 raise ValueError(
                     f"custom_centroids has shape {custom_centroids.shape} but "
-                    f"must be of shape ({bins}, {self._behavior_dim})")
+                    f"must be of shape (bins={bins}, len(ranges)="
+                    f"{self._behavior_dim})")
             self._centroids = custom_centroids
             self._samples = None
 
